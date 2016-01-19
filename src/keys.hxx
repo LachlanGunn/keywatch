@@ -20,6 +20,17 @@ public:
 	  _flags(flags) {}
 
     const std::string& identifier() const;
+    void               setIdentifier(const std::string& identifier);
+
+    const unsigned long long int& creationTime() const;
+    void setCreationTime(const unsigned long long int& creationTime);
+
+    const unsigned long long int& expirationTime() const;
+    void setExpirationTime(const unsigned long long int& expirationTime);
+
+    const std::string& flags() const;
+    void setFlags(const std::string& flags);
+
 
 private:
     std::string _identifier;
