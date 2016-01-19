@@ -1,10 +1,14 @@
-#include "hkp.h"
+// Copyright 2016 Lachlan Gunn
+
+#include "hkp/hkp.h"
+
+#include <string>
 
 extern "C" {
 #include <curl/curl.h> // NOLINT
 }
 
-#include <boost/format.hpp>
+#include <boost/format.hpp> //NOLINT
 
 #include "hkp/parser.h"
 
@@ -73,10 +77,9 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
 
   int curl_error = curl_easy_perform(state_->curl_handle);
 
-  if(curl_error)
-  {
+  if (curl_error) {
     return std::list<PublicKey>();
-  } 
+  }
   parser.flush();
   return parser.keys();
 }

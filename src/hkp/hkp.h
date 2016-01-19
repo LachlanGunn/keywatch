@@ -1,15 +1,16 @@
 // Copyright Lachlan Gunn 2016
 
-#ifndef KEYWATCHD_HKP_H_
-#define KEYWATCHD_HKP_H_
+#ifndef KEYWATCHD_HKP_HKP_H_
+#define KEYWATCHD_HKP_HKP_H_
 
 #include <stdint.h>
 
+#include <string>
 #include <list>
 #include <memory>
 
 #include "keys/keys.h"
-
+  
 extern bool HKPInit();
 extern void HKPCleanup();
 
@@ -30,10 +31,13 @@ class HKPServer {
 
  private:
   struct HKPServerState_;
-  
+
+  HKPServer(HKPServer& rhs);
+  HKPServer& operator=(HKPServer& rhs);
+
   std::string host_;
   std::string proxy_;
   std::unique_ptr<struct HKPServerState_> state_;
 };
 
-#endif  // KEYWATCHD_HKP_H_
+#endif  // KEYWATCHD_HKP_HKP_H_
