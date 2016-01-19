@@ -1,12 +1,12 @@
 // Copyright 2016 Lachlan Gunn
 
-#ifndef KEYWATCHDOG_PARSER_H_
-#define KEYWATCHDOG_PARSER_H_
+#ifndef KEYWATCHD_HKP_PARSER_H_
+#define KEYWATCHD_HKP_PARSER_H_
 
 #include <string>
 #include <list>
 
-#include "keys.h"
+#include "keys/keys.h"
 
 class HKPResponseParser;
 
@@ -28,4 +28,4 @@ class HKPResponseParser {
   int parserState;
 };
 
-#endif
+#endif  // KEYWATCHD_HKP_PARSER_H

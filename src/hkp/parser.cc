@@ -17,7 +17,7 @@
 
 #include <boost/config.hpp>                           // NOLINT
 
-#include "keys.h"
+#include "keys/keys.h"
 
 namespace qi    = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "keys.h"
+#include "keys/keys.h"
 
 const std::string& PublicKey::identifier() const {
   return _identifier;

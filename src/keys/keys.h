@@ -1,7 +1,7 @@
 // Copyright 2016 Lachlan Gunn
 
-#ifndef KWATCHDOG_KEYS_H_
-#define KWATCHDOG_KEYS_H_
+#ifndef KEYWATCHD_KEYS_KEYS_H_
+#define KEYWATCHD_KEYS_KEYS_H_
 
 #include <stdint.h>
 
@@ -87,4 +87,4 @@ class PublicKey {
   std::list<UserID> _uids;
 };
 
-#endif  // KWATCHDOG_KEYS_H_
+#endif  // KEYWATCHD_KEYS_KEYS_H_
