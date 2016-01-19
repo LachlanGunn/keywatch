@@ -4,7 +4,7 @@ PROJECT(keywatchd)
 
 #### Configuration ############################################################
 
-SET(CMAKE_CXX_FLAGS -g)
+SET(CMAKE_CXX_FLAGS -std=c++11)
 
 #### Libraries ################################################################
 

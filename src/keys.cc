@@ -1,91 +1,77 @@
-#include "keys.hxx"
+// Copyright 2016 Lachlan Gunn
 
-const std::string& PublicKey::identifier() const
-{
-    return _identifier;
+#include <stdint.h>
+
+#include "keys.h"
+
+const std::string& PublicKey::identifier() const {
+  return _identifier;
 }
 
-void PublicKey::setIdentifier(const std::string& identifier)
-{
-    _identifier = identifier;
+void PublicKey::setIdentifier(const std::string& identifier) {
+  _identifier = identifier;
 }
 
-const unsigned int& PublicKey::keyLength() const
-{
-    return _key_length;
+const int32_t& PublicKey::keyLength() const {
+  return _key_length;
 }
 
-void PublicKey::setKeyLength(const unsigned int& keyLength)
-{
-    _key_length = keyLength;
+void PublicKey::setKeyLength(const int32_t& keyLength) {
+  _key_length = keyLength;
 }
 
-const unsigned long long int& PublicKey::creationTime() const
-{
-    return _creation_time;
+const int64_t& PublicKey::creationTime() const {
+  return _creation_time;
 }
 
-void PublicKey::setCreationTime(const unsigned long long int& creationTime)
-{
-    _creation_time = creationTime;
+void PublicKey::setCreationTime(const int64_t& creationTime) {
+  _creation_time = creationTime;
 }
 
-const unsigned long long int& PublicKey::expirationTime() const
-{
-    return _expiration_time;
+const int64_t& PublicKey::expirationTime() const {
+  return _expiration_time;
 }
 
-void PublicKey::setExpirationTime(const unsigned long long int& expirationTime)
-{
-    _expiration_time = expirationTime;
+void PublicKey::setExpirationTime(const int64_t& expirationTime) {
+  _expiration_time = expirationTime;
 }
 
-const std::string& PublicKey::flags() const
-{
-    return _flags;
+const std::string& PublicKey::flags() const {
+  return _flags;
 }
 
-const std::list<UserID>& PublicKey::uids() const
-{
-    return _uids;
+const std::list<UserID>& PublicKey::uids() const {
+  return _uids;
 }
 
-void PublicKey::addUid(UserID uid)
-{
-    _uids.push_back(uid);
+void PublicKey::addUid(UserID uid) {
+  _uids.push_back(uid);
 }
 
-const std::string& UserID::identifier() const
-{
-    return _identifier;
+const std::string& UserID::identifier() const {
+  return _identifier;
 }
 
-void UserID::setIdentifier(const std::string& identifier)
-{
-    _identifier = identifier;
+void UserID::setIdentifier(const std::string& identifier) {
+  _identifier = identifier;
 }
 
-const unsigned long long int& UserID::creationTime() const
-{
-    return _creation_time;
+const int64_t& UserID::creationTime() const {
+  return _creation_time;
 }
 
-void UserID::setCreationTime(const unsigned long long int& creationTime)
-{
-    _creation_time = creationTime;
+void UserID::setCreationTime(const int64_t& creationTime) {
+  _creation_time = creationTime;
 }
 
-const unsigned long long int& UserID::expirationTime() const
-{
-    return _expiration_time;
+const int64_t& UserID::expirationTime() const {
+  return _expiration_time;
 }
 
-void UserID::setExpirationTime(const unsigned long long int& expirationTime)
-{
-    _expiration_time = expirationTime;
+void UserID::setExpirationTime(const int64_t& expirationTime) {
+  _expiration_time = expirationTime;
 }
 
-const std::string& UserID::flags() const
-{
-    return _flags;
+const std::string& UserID::flags() const {
+  return _flags;
 }
