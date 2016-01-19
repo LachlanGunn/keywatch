@@ -8,11 +8,15 @@
 #include "hkp/hkp.h"
 #include "keys/keys.h"
 
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
+
 int main(int argc, char** argv) {
-  HKPInit();
+  keywatch::hkp::HKPInit();
   
-  HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
-                   "localhost:9050");
+  keywatch::hkp::HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
+                                  "localhost:9050");
   std::list<PublicKey> keys = server.GetKeys("lachlan@twopif.net");
 
   std::list<PublicKey>::const_iterator iterator, end;
@@ -30,6 +34,6 @@ int main(int argc, char** argv) {
     }
   }
 
-  HKPCleanup();
+  keywatch::hkp::HKPCleanup();
   return 0;
 }

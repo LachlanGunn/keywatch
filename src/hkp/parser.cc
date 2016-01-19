@@ -19,6 +19,13 @@
 
 #include "keys/keys.h"
 
+namespace keywatch {
+  namespace hkp {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
+
 namespace qi    = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
 
@@ -50,14 +57,17 @@ struct raw_public_key {
   std::string flags;
 };
 
+  }
+}
+
 BOOST_FUSION_ADAPT_STRUCT(
-    raw_info,
+    keywatch::hkp::raw_info,
     (int32_t, version)
     (int64_t, count)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
-    raw_uid,
+    keywatch::hkp::raw_uid,
     (std::string, user)
     (int64_t, creation_date)
     (int64_t, expiration_date)
@@ -65,7 +75,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
-    raw_public_key,
+    keywatch::hkp::raw_public_key,
     (std::string, key_id)
     (int32_t, algorithm)
     (int32_t, length)
@@ -73,6 +83,13 @@ BOOST_FUSION_ADAPT_STRUCT(
     (int64_t, expiration_date)
     (std::string, flags)
 )
+
+namespace keywatch {
+  namespace hkp {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
 
 template <typename Iterator>
 struct info_parser : qi::grammar<Iterator, raw_info()> {
@@ -267,3 +284,6 @@ void HKPResponseParser::flush() {
   parseLine(buffer);
   buffer = std::string();
 }
+
+  } // namespace hkp
+} // namespace keywatch

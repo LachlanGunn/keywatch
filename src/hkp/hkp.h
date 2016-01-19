@@ -10,11 +10,15 @@
 #include <memory>
 
 #include "keys/keys.h"
-  
+
+namespace keywatch {
+namespace hkp {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
 extern bool HKPInit();
 extern void HKPCleanup();
-
-struct _HKPServerState;
 
 class HKPServer {
  public:
@@ -39,5 +43,8 @@ class HKPServer {
   std::string proxy_;
   std::unique_ptr<struct HKPServerState_> state_;
 };
+
+}  //   namespace hkp
+}  // namespace keywatch
 
 #endif  // KEYWATCHD_HKP_HKP_H_

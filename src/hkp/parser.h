@@ -8,6 +8,13 @@
 
 #include "keys/keys.h"
 
+namespace keywatch {
+  namespace hkp {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
+
 class HKPResponseParser;
 
 class HKPResponseParser {
@@ -27,5 +34,8 @@ class HKPResponseParser {
   std::string buffer;
   int parserState;
 };
+
+  } // namespace hkp
+} // namespace keywatch
 
 #endif  // KEYWATCHD_HKP_PARSER_H

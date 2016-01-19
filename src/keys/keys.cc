@@ -4,6 +4,12 @@
 
 #include "keys/keys.h"
 
+namespace keywatch {
+namespace keys {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
 const std::string& PublicKey::identifier() const {
   return _identifier;
 }
@@ -75,3 +81,6 @@ void UserID::setExpirationTime(const int64_t& expirationTime) {
 const std::string& UserID::flags() const {
   return _flags;
 }
+
+}    // namespace keys
+}  // namespace keywatch

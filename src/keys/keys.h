@@ -8,6 +8,9 @@
 #include <string>
 #include <list>
 
+namespace keywatch {
+  namespace keys {
+  
 class PublicKey;
 class UserID;
 
@@ -86,5 +89,8 @@ class PublicKey {
   std::string _flags;
   std::list<UserID> _uids;
 };
+
+  } // namespace keys
+} // namespace keywatch
 
 #endif  // KEYWATCHD_KEYS_KEYS_H_

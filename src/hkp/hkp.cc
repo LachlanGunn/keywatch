@@ -12,7 +12,13 @@ extern "C" {
 
 #include "hkp/parser.h"
 
-struct HKPServer::HKPServerState_ {
+namespace keywatch {
+namespace hkp {
+
+using keywatch::keys::PublicKey;
+using keywatch::keys::UserID;
+
+struct keywatch::hkp::HKPServer::HKPServerState_ {
   CURL* curl_handle;
 };
 
@@ -25,6 +31,8 @@ void HKPCleanup() {
   curl_global_cleanup();
 }
 
+namespace {
+
 // Callback for CURL
 static size_t _HKPWriteCallback(void* buffer, size_t size, size_t nmemb,
                                 void* userp) {
@@ -32,6 +40,8 @@ static size_t _HKPWriteCallback(void* buffer, size_t size, size_t nmemb,
   parser->parseCharacters(std::string((const char*)buffer, size*nmemb));
 
   return size*nmemb;
+}
+
 }
 
 HKPServer::HKPServer(std::string host, std::string proxy) : host_(host) {
@@ -83,3 +93,6 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
   parser.flush();
   return parser.keys();
 }
+
+}  //   namespace hkp
+}  // namespace keywatch
