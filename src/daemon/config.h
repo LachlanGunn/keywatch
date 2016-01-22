@@ -22,7 +22,7 @@ class Recipient {
 
 class Configuration {
  public:
-  static Configuration&& fromFile(std::string filename);
+  static Configuration fromFile(std::string filename);
   
  private:
   Configuration();
