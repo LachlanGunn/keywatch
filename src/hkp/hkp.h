@@ -1,7 +1,7 @@
 // Copyright Lachlan Gunn 2016
 
-#ifndef KEYWATCHD_HKP_HKP_H_
-#define KEYWATCHD_HKP_HKP_H_
+#ifndef KEYWATCH_HKP_HKP_H_
+#define KEYWATCH_HKP_HKP_H_
 
 #include <stdint.h>
 
@@ -47,4 +47,4 @@ class HKPServer {
 }  //   namespace hkp
 }  // namespace keywatch
 
-#endif  // KEYWATCHD_HKP_HKP_H_
+#endif  // KEYWATCH_HKP_HKP_H_

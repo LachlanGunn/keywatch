@@ -1,7 +1,7 @@
 // Copyright 2016 Lachlan Gunn
 
-#ifndef KEYWATCHD_KEYS_KEYS_H_
-#define KEYWATCHD_KEYS_KEYS_H_
+#ifndef KEYWATCH_KEYS_KEYS_H_
+#define KEYWATCH_KEYS_KEYS_H_
 
 #include <stdint.h>
 
@@ -93,4 +93,4 @@ class PublicKey {
   } // namespace keys
 } // namespace keywatch
 
-#endif  // KEYWATCHD_KEYS_KEYS_H_
+#endif  // KEYWATCH_KEYS_KEYS_H_

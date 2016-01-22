@@ -1,7 +1,7 @@
 // Copyright 2016 Lachlan Gunn
 
-#ifndef KEYWATCHD_DAEMON_CONFIG_H_
-#define KEYWATCHD_DAEMON_CONFIG_H_
+#ifndef KEYWATCH_DAEMON_CONFIG_H_
+#define KEYWATCH_DAEMON_CONFIG_H_
 
 #include <list>
 #include <string>
@@ -22,7 +22,7 @@ class Recipient {
 
 class Configuration {
  public:
-  static Configuration&& 
+  static Configuration&& fromFile(std::string filename);
   
  private:
   Configuration();
@@ -32,4 +32,4 @@ class Configuration {
 }  // namespace keywatch
 
 
-#endif  // KEYWATCHD_DAEMON_CONFIG_H_
+#endif  // KEYWATCH_DAEMON_CONFIG_H_

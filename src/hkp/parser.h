@@ -1,7 +1,7 @@
 // Copyright 2016 Lachlan Gunn
 
-#ifndef KEYWATCHD_HKP_PARSER_H_
-#define KEYWATCHD_HKP_PARSER_H_
+#ifndef KEYWATCH_HKP_PARSER_H_
+#define KEYWATCH_HKP_PARSER_H_
 
 #include <string>
 #include <list>
@@ -38,4 +38,4 @@ class HKPResponseParser {
   } // namespace hkp
 } // namespace keywatch
 
-#endif  // KEYWATCHD_HKP_PARSER_H
+#endif  // KEYWATCH_HKP_PARSER_H
