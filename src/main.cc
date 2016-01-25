@@ -4,11 +4,15 @@
 
 #include <string>
 #include <iostream>
+#include <functional>
+#include <thread>
+#include <memory>
 
 #include <boost/program_options.hpp> // NOLINT
 
 #include "hkp/hkp.h"
 #include "keys/keys.h"
+#include "daemon/worker.h"
 
 using keywatch::keys::PublicKey;
 using keywatch::keys::UserID;
@@ -47,26 +51,22 @@ int main(int argc, char** argv) {
   std::vector<std::string> recipients =
       vm["recipient"].as< std::vector<std::string> >();
 
+  std::list< std::unique_ptr<std::thread> > threads;
+ 
   for (std::vector<std::string>::const_iterator i = recipients.begin();
        i != recipients.end(); i++) {
     std::cerr << "Looking up " << *i << "\n";
 
-    std::list<PublicKey> keys = server.GetKeys(*i);
+    threads.push_back(std::unique_ptr<std::thread>(
+        new std::thread(std::bind(keywatch::daemon::workerThread,
+                                  keywatch::daemon::Recipient(*i)))));
 
-    std::list<PublicKey>::const_iterator iterator, end;
-    for (iterator = keys.begin(), end = keys.end();
-         iterator != end;
-         iterator++) {
-      printf("Key: %s\n", (*iterator).identifier().c_str());
+  }
 
-      std::list<UserID>::const_iterator iterator_uid, end_uid;
-      std::list<UserID> uids = iterator->uids();
-      for (iterator_uid = uids.begin(), end_uid = uids.end();
-           iterator_uid != end_uid;
-           iterator_uid++) {
-        printf("    UID: %s\n", iterator_uid->identifier().c_str());
-      }
-    }
+  for(std::list< std::unique_ptr<std::thread> >::const_iterator current_thread
+          = threads.begin();
+      current_thread != threads.end(); current_thread++) {
+    (*current_thread)->join();
   }
 
   keywatch::hkp::HKPCleanup();

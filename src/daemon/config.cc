@@ -16,5 +16,11 @@ void Recipient::setEmail(const std::string& email) {
   email_ = email;
 }
 
+Configuration::Configuration() {}
+
+const std::list<Recipient>& Configuration::recipients() const {
+  return recipients_;
+}
+
 } // namespace daemon
 } // namespace daemon

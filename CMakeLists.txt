@@ -16,6 +16,12 @@ INCLUDE_DIRECTORIES(Boost_INCLUDE_DIRS)
 FIND_PACKAGE(CURL REQUIRED)
 INCLUDE_DIRECTORIES(${CURL_INCLUDE_DIRS})
 
+# Crypto++ (for hashing and random-number generation)
+FIND_LIBRARY(CRYPTOPP_LIBRARIES crypto++)
+IF(NOT CRYPTOPP_LIBRARIES)
+  MESSAGE(SEND_ERROR "Could not find Crypto++")
+ENDIF(NOT CRYPTOPP_LIBRARIES)
+
 #### Down to business #########################################################
 
 SUBDIRS(src)

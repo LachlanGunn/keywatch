@@ -22,10 +22,14 @@ class Recipient {
 
 class Configuration {
  public:
+  Configuration();
+
+  const std::list<Recipient>& recipients() const;
+
   static Configuration fromFile(std::string filename);
   
  private:
-  Configuration();
+  std::list<Recipient> recipients_;
 };
 
 }  // namespace daemon
