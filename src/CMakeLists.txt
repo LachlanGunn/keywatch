@@ -7,6 +7,6 @@ ADD_EXECUTABLE(keywatchd
   hkp/parser.cc
   daemon/config.cc)
 
-TARGET_LINK_LIBRARIES(keywatchd ${CURL_LIBRARIES})
+TARGET_LINK_LIBRARIES(keywatchd ${CURL_LIBRARIES} ${Boost_LIBRARIES})
 
 MESSAGE(${CURL_LIBRARIES})

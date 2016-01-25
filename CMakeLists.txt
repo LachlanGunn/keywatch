@@ -9,7 +9,7 @@ SET(CMAKE_CXX_FLAGS -std=c++11)
 #### Libraries ################################################################
 
 # Boost (for the Spirit parser)
-FIND_PACKAGE(Boost REQUIRED)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS program_options)
 INCLUDE_DIRECTORIES(Boost_INCLUDE_DIRS)
 
 # CURL (for http)
