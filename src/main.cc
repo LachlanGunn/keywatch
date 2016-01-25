@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <boost/program_options.hpp> // NOLINT
+#include <boost/lockfree/queue.hpp>  // NOLINT
 
 #include "hkp/hkp.h"
 #include "keys/keys.h"
@@ -52,15 +53,37 @@ int main(int argc, char** argv) {
       vm["recipient"].as< std::vector<std::string> >();
 
   std::list< std::unique_ptr<std::thread> > threads;
- 
+  boost::lockfree::queue< std::list<PublicKey>* > responses(1024);  
+
   for (std::vector<std::string>::const_iterator i = recipients.begin();
        i != recipients.end(); i++) {
     std::cerr << "Looking up " << *i << "\n";
 
     threads.push_back(std::unique_ptr<std::thread>(
         new std::thread(std::bind(keywatch::daemon::workerThread,
-                                  keywatch::daemon::Recipient(*i)))));
+                                  keywatch::daemon::Recipient(*i),
+                                  &responses))));
 
+  }
+
+  while (true) {
+    std::list<PublicKey>* keys;
+    while(!responses.pop(keys)) {}
+    std::list<PublicKey>::const_iterator iterator, end;
+    for (iterator = keys->begin(), end = keys->end();
+         iterator != end;
+         iterator++) {
+      printf("Key: %s\n", (*iterator).identifier().c_str());
+
+      std::list<UserID>::const_iterator iterator_uid, end_uid;
+      std::list<UserID> uids = iterator->uids();
+      for (iterator_uid = uids.begin(), end_uid = uids.end();
+           iterator_uid != end_uid;
+           iterator_uid++) {
+        printf("    UID: %s\n", iterator_uid->identifier().c_str());
+      }
+    }
+    delete keys;
   }
 
   for(std::list< std::unique_ptr<std::thread> >::const_iterator current_thread
