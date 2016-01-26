@@ -18,7 +18,14 @@ namespace daemon {
 using keywatch::keys::PublicKey;
 using keywatch::keys::UserID;
 
-static void WaitForNextRequest(double tick_length, double offset) {
+static double GetNextOffset() {
+  uint64_t offset_int;
+  CryptoPP::NonblockingRng rng;
+  rng.GenerateBlock(reinterpret_cast<byte*>(&offset_int), sizeof(offset_int));
+  return ((double)offset_int)/UINT64_MAX;
+}
+
+static void WaitForNextRequest(double tick_length) {
   // Set our epoch at 2000-01-01T0000Z
   struct std::tm epoch_date { 0, 0, 0, 0, 0, 100, 0, 0, 0 };
   std::time_t epoch_time_t = timegm(&epoch_date);
@@ -32,7 +39,7 @@ static void WaitForNextRequest(double tick_length, double offset) {
   double ticks_remaining = std::ceil(current_tick_number) - current_tick_number;
   std::chrono::duration<int> time_remaining =
       std::chrono::duration_cast<std::chrono::duration<int>>(
-          tick_duration*ticks_remaining);
+          tick_duration*(ticks_remaining + GetNextOffset()*0.8));
   
   std::chrono::system_clock::time_point next_tick
       = now + time_remaining;
@@ -47,7 +54,7 @@ void workerThread(Recipient recipient,
   std::string email = recipient.email();
 
   while (true) {
-    WaitForNextRequest(30.0, 0);
+    WaitForNextRequest(10.0);
     std::list<PublicKey> keys = server.GetKeys(email);
 
     responses->push(new std::list<PublicKey>(keys));    
