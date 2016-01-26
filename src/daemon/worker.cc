@@ -1,12 +1,14 @@
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <list>
 #include <ctime>
 #include <cstdint>
 #include <cmath>
+#include <queue>
 
 #include <cryptopp/osrng.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/lockfree/queue.hpp> 
 
 #include "daemon/config.h"
 #include "hkp/hkp.h"
@@ -47,17 +49,21 @@ static void WaitForNextRequest(double tick_length) {
 }
 
 void workerThread(Recipient recipient,
-                  boost::lockfree::queue<std::list<PublicKey>* >* responses) {
+                  std::mutex& queue_mutex,
+                  std::condition_variable& queue_condition_variable,
+                  std::queue<PublicKey>* responses) {
   keywatch::hkp::HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
                                   "localhost:9050");
-
   std::string email = recipient.email();
 
   while (true) {
     WaitForNextRequest(10.0);
     std::list<PublicKey> keys = server.GetKeys(email);
 
-    responses->push(new std::list<PublicKey>(keys));    
+    std::unique_lock<std::mutex> queue_lock(queue_mutex);
+    responses->push(keys.front());
+    queue_lock.unlock();
+    queue_condition_variable.notify_one();
   }
 }
 
