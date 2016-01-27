@@ -3,6 +3,7 @@
 #include "hkp/hkp.h"
 
 #include <string>
+#include <mutex>
 
 extern "C" {
 #include <curl/curl.h> // NOLINT
@@ -42,6 +43,9 @@ static size_t _HKPWriteCallback(void* buffer, size_t size, size_t nmemb,
   return size*nmemb;
 }
 
+static uint64_t connection_number = 0;
+static std::mutex connection_number_mutex;
+
 }
 
 HKPServer::HKPServer(std::string host, std::string proxy) : host_(host) {
@@ -51,6 +55,10 @@ HKPServer::HKPServer(std::string host, std::string proxy) : host_(host) {
 
   curl_easy_setopt(state_->curl_handle, CURLOPT_WRITEFUNCTION,
                    _HKPWriteCallback);
+
+  curl_easy_setopt(state_->curl_handle, CURLOPT_FOLLOWLOCATION,
+                   1);
+
 }
 
 HKPServer::~HKPServer() {
@@ -71,9 +79,6 @@ const std::string& HKPServer::proxy() const {
 
 void HKPServer::setProxy(const std::string& proxy) {
   proxy_ = proxy;
-  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, proxy.c_str());
-  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXYTYPE,
-              CURLPROXY_SOCKS5_HOSTNAME);
 }
 
 const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
@@ -85,10 +90,24 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
   curl_easy_setopt(state_->curl_handle, CURLOPT_URL, url.c_str());
   curl_easy_setopt(state_->curl_handle, CURLOPT_WRITEDATA, &parser);
 
-  int curl_error = curl_easy_perform(state_->curl_handle);
+  std::string proxy_url;
+
+  // The connection number is global, we need to lock for thread-safety.
+  {
+    std::lock_guard<std::mutex> lock(connection_number_mutex);
+    proxy_url = (boost::format("%1%:password@%2%")
+                 % connection_number++ % proxy_).str();
+  }
+
+  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, proxy_url.c_str());
+  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXYTYPE,
+              CURLPROXY_SOCKS5_HOSTNAME);
+
+  CURLcode curl_error = curl_easy_perform(state_->curl_handle);
 
   if (curl_error) {
     return std::list<PublicKey>();
+    std::cerr << "ERROR: " << curl_easy_strerror(curl_error) << "\n";
   }
   parser.flush();
   return parser.keys();
