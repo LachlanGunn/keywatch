@@ -59,6 +59,9 @@ void workerThread(Recipient recipient,
   while (true) {
     WaitForNextRequest(10.0);
     std::list<PublicKey> keys = server.GetKeys(email);
+    if (keys.empty()) {
+      continue;
+    }
 
     std::unique_lock<std::mutex> queue_lock(queue_mutex);
     responses->push(keys.front());
