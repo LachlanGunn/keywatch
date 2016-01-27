@@ -169,24 +169,24 @@ bool parse_uid(Iterator first, Iterator last, struct raw_uid* result) {
 
 static std::tuple<bool, std::string, std::string> find_newline(
     std::string str) {
-  int index;
+  std::size_t index;
   int firstIndex = -1;
   int newlineLength;
 
   index = str.find("\r\n");
-  if (index >= 0) {
+  if (index != std::string::npos) {
     newlineLength = 2;
     firstIndex = index;
   }
 
   index = str.find("\n");
-  if (index >= 0 && index < firstIndex) {
+  if (index != std::string::npos && index < firstIndex) {
     newlineLength = 1;
     firstIndex = index;
   }
 
   index = str.find("\r");
-  if (index >= 0 && index < firstIndex) {
+  if (index != std::string::npos && index < firstIndex) {
     newlineLength = 1;
     firstIndex = index;
   }
