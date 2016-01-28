@@ -55,6 +55,7 @@ void workerThread(Recipient recipient,
   keywatch::hkp::HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
                                   "localhost:9050");
   std::string email = recipient.email();
+  std::unique_ptr<std::string> fingerprint(nullptr);
 
   while (true) {
     WaitForNextRequest(10.0);
@@ -63,10 +64,17 @@ void workerThread(Recipient recipient,
       continue;
     }
 
-    std::unique_lock<std::mutex> queue_lock(queue_mutex);
-    responses->push(keys.front());
-    queue_lock.unlock();
-    queue_condition_variable.notify_one();
+    PublicKey first_key = keys.front();
+
+    if (nullptr == fingerprint) {
+      fingerprint.reset(new std::string(first_key.identifier()));
+    }
+    else if(first_key.identifier() != *fingerprint) {
+      std::unique_lock<std::mutex> queue_lock(queue_mutex);
+      responses->push(keys.front());
+      queue_lock.unlock();
+      queue_condition_variable.notify_one();
+    }
   }
 }
 
