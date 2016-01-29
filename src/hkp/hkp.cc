@@ -92,16 +92,20 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
 
   std::string proxy_url;
 
-  // The connection number is global, we need to lock for thread-safety.
-  {
-    std::lock_guard<std::mutex> lock(connection_number_mutex);
-    proxy_url = (boost::format("%1%:password@%2%")
-                 % connection_number++ % proxy_).str();
+  if (!proxy_.empty()) {
+    // The connection number is global, we need to lock for thread-safety.
+    {
+      std::lock_guard<std::mutex> lock(connection_number_mutex);
+      proxy_url = (boost::format("%1%:password@%2%")
+                   % connection_number++ % proxy_).str();
+    }
+    curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, proxy_url.c_str());
+    curl_easy_setopt(state_->curl_handle, CURLOPT_PROXYTYPE,
+                     CURLPROXY_SOCKS5_HOSTNAME);
   }
-
-  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, proxy_url.c_str());
-  curl_easy_setopt(state_->curl_handle, CURLOPT_PROXYTYPE,
-              CURLPROXY_SOCKS5_HOSTNAME);
+  else {
+    curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, "");
+  }
 
   CURLcode curl_error = curl_easy_perform(state_->curl_handle);
 
