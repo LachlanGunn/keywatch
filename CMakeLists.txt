@@ -4,7 +4,13 @@ PROJECT(keywatch)
 
 #### Configuration ############################################################
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -Wextra -pedantic")
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  SET(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -Wextra -pedantic")
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  SET(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -Wextra -pedantic -ftemplate-depth=1024")
+ENDIF()
 
 #### Libraries ################################################################
 
