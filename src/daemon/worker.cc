@@ -66,8 +66,8 @@ void workerThread(Recipient recipient,
                   std::mutex& queue_mutex,
                   std::condition_variable& queue_condition_variable,
                   std::queue<PublicKey>* responses) {
-  keywatch::hkp::HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
-                                  "localhost:9050");
+  keywatch::hkp::HKPServer server(recipient.keyserver(), recipient.proxy());
+
   std::string email = recipient.email();
   std::unique_ptr<std::string> fingerprint(nullptr);
 

@@ -19,21 +19,34 @@
 #include "keys/keys.h"
 #include "daemon/worker.h"
 
+#ifndef KEYWATCH_DEFAULT_KEYSERVER
+#define KEYWATCH_DEFAULT_KEYSERVER "http://jirk5u4osbsr34t5.onion:11371"
+#endif
+
+#ifndef KEYWATCH_DEFAULT_PROXY
+#define KEYWATCH_DEFAULT_PROXY "localhost:9050"
+#endif
+
 using keywatch::keys::PublicKey;
 using keywatch::keys::UserID;
 
 namespace po = boost::program_options;
 
-[[noreturn]]
 int main(int argc, char** argv) {
   keywatch::hkp::HKPInit();
 
   try {
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help", "produce help message")
+        ("help", "    Produce this help message.")
         ("recipient,r", po::value< std::vector<std::string> >(),
-         "recipient to look up");
+         "    Email addresses to look up.")
+        ("keyserver,s", po::value< std::string >()
+         ->default_value(KEYWATCH_DEFAULT_KEYSERVER),
+         "    The keyserver to audit.")
+        ("proxy,p", po::value< std::string >()
+         ->default_value(KEYWATCH_DEFAULT_PROXY),
+         "    The proxy by which to connect to the keyserver.");
 
     po::positional_options_description p;
     p.add("recipient", -1);
@@ -50,13 +63,16 @@ int main(int argc, char** argv) {
       std::exit(1);
     }
 
-    std::cerr << "Preparing to do lookup.\n";
+    if (vm.count("recipient") == 0) {
+      std::cerr << "No email addresses specified." << std::endl;
+      return 1;
+    }
 
-    keywatch::hkp::HKPServer server("http://jirk5u4osbsr34t5.onion:11371",
-                                    "localhost:9050");
+    std::string keyserver = vm["keyserver"].as<std::string>();
+    std::string proxy = vm["proxy"].as<std::string>();
 
-    std::vector<std::string> recipients =
-        vm["recipient"].as< std::vector<std::string> >();
+    std::vector<std::string> recipients;
+    recipients = vm["recipient"].as< std::vector<std::string> >();
 
     std::list< std::unique_ptr<std::thread> > threads;
     std::queue<PublicKey> responses;
@@ -65,11 +81,11 @@ int main(int argc, char** argv) {
 
     for (std::vector<std::string>::const_iterator i = recipients.begin();
          i != recipients.end(); i++) {
-      std::cerr << "Looking up " << *i << "\n";
 
       threads.push_back(std::unique_ptr<std::thread>(
           new std::thread(std::bind(keywatch::daemon::workerThread,
-                                    keywatch::daemon::Recipient(*i),
+                                    keywatch::daemon::Recipient(*i, keyserver,
+                                                                proxy),
                                     std::ref(queue_mutex),
                                     std::ref(queue_condition_variable),
                                     &responses))));
@@ -101,4 +117,6 @@ int main(int argc, char** argv) {
     keywatch::hkp::HKPCleanup();
     throw;
   }
+
+  return 0;
 }

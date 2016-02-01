@@ -11,13 +11,22 @@ namespace daemon {
 
 class Recipient {
  public:
-  explicit Recipient(const std::string& email);
+  Recipient(const std::string& email, const std::string& keyserver,
+            const std::string& proxy);
 
   const std::string& email() const;
   void setEmail(const std::string& rhs);
 
+  const std::string& keyserver() const;
+  void setKeyserver(const std::string& rhs);
+
+  const std::string& proxy() const;
+  void setProxy(const std::string& rhs);
+
  private:
   std::string email_;
+  std::string keyserver_;
+  std::string proxy_;
 };
 
 class Configuration {
