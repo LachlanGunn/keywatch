@@ -29,7 +29,7 @@ static double GetNextOffset() {
 
 static const std::chrono::system_clock::time_point GetEpoch() {
   // Set our epoch at 2000-01-01T0000Z
-  struct std::tm epoch_date { 0, 0, 0, 0, 0, 100, 0, 0, 0 };
+  struct std::tm epoch_date = { 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0 };
   std::time_t epoch_time_t = timegm(&epoch_date);
   return std::chrono::system_clock::from_time_t(epoch_time_t);
 }
