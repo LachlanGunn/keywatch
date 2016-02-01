@@ -28,7 +28,8 @@ fingerprint of the first response.
 ```
   keywatchd [-s keyserver] [-p proxy] <email> ...
 ```
-By default, this will use Tor to connect to http://jirk5u4osbsr34t5.onion:11371,
+By default, keywatchd will use Tor to connect to
+http://jirk5u4osbsr34t5.onion:11371,
 a hidden service that provides access to the SKS Keyserver network.  We use
 This is defensive design decision to ensure that a bug cannot cause the
 site to be resolved directly, without the use of Tor.
@@ -59,3 +60,40 @@ Key: XF3E3889185605B82933D6180D28891D2136B33B0
     UID: Lachlan Gunn <lachlan.gunn@adelaide.edu.au>
 ```
 This will continue until the file is returned to its original state.
+
+Building keywatchd
+------------------
+
+Keywatch is written in C++, and requires the Boost and libcurl libraries.
+The build infrastructure uses CMake, and has been tested on Linux with both
+GCC and clang.  It can be built as follows:
+```
+keywatch > mkdir build && cd build && cmake .. && make
+-- The C compiler identification is GNU 4.8.4
+-- The CXX compiler identification is GNU 4.8.4
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Boost version: 1.55.0
+-- Found the following Boost libraries:
+--   program_options
+-- Found CURL: /usr/lib/x86_64-linux-gnu/libcurl.so (found version "7.35.0") 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/lachlan/source/keywatchd/build
+Scanning dependencies of target keywatchd
+[ 16%] Building CXX object src/CMakeFiles/keywatchd.dir/main.cc.o
+[ 33%] Building CXX object src/CMakeFiles/keywatchd.dir/keys/keys.cc.o
+[ 50%] Building CXX object src/CMakeFiles/keywatchd.dir/hkp/hkp.cc.o
+[ 66%] Building CXX object src/CMakeFiles/keywatchd.dir/hkp/parser.cc.o
+[ 83%] Building CXX object src/CMakeFiles/keywatchd.dir/daemon/config.cc.o
+[100%] Building CXX object src/CMakeFiles/keywatchd.dir/daemon/worker.cc.o
+Linking CXX executable keywatchd
+[100%] Built target keywatchd
+```
+The resulting executable is `build/src/keywatchd`.
