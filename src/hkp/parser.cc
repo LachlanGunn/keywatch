@@ -171,7 +171,7 @@ static std::tuple<bool, std::string, std::string> find_newline(
     std::string str) {
   std::size_t index;
   std::size_t firstIndex = std::string::npos;
-  int newlineLength;
+  std::size_t newlineLength = 0;
 
   index = str.find("\r\n");
   if (index != std::string::npos) {
@@ -244,8 +244,7 @@ void HKPResponseParser::parseLine(std::string line) {
       if (parse_info(line.begin(), line.end(), &info)) {
         parserState = AwaitingPub;
       }
-
-
+      break;
     case AwaitingPub:
       if (parse_public_key(line.begin(), line.end(), &pub)) {
         _keys.push_back(PublicKey(
@@ -258,9 +257,7 @@ void HKPResponseParser::parseLine(std::string line) {
 
         parserState = AwaitingUid;
       }
-
       break;
-
     case AwaitingUid:
       if (parse_uid(line.begin(), line.end(), &uid)) {
         _keys.back().addUid(UserID(

@@ -10,6 +10,7 @@
 #include <cryptopp/osrng.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "daemon/worker.h"
 #include "daemon/config.h"
 #include "hkp/hkp.h"
 #include "keys/keys.h"

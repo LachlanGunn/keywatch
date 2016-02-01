@@ -110,8 +110,8 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
   CURLcode curl_error = curl_easy_perform(state_->curl_handle);
 
   if (curl_error) {
-    return std::list<PublicKey>();
     std::cerr << "ERROR: " << curl_easy_strerror(curl_error) << "\n";
+    return std::list<PublicKey>();
   }
   parser.flush();
   return parser.keys();

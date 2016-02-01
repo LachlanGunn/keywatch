@@ -11,6 +11,7 @@
 namespace keywatch {
 namespace daemon {
 
+[[noreturn]]
 void workerThread(Recipient recipient,
                   std::mutex& queue_mutex,
                   std::condition_variable& queue_condition_variable,
