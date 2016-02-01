@@ -3,6 +3,7 @@
 #ifndef KEYWATCH_HKP_PARSER_H_
 #define KEYWATCH_HKP_PARSER_H_
 
+#include <cstdint>
 #include <string>
 #include <list>
 
@@ -32,7 +33,7 @@ class HKPResponseParser {
  private:
   std::list<PublicKey> _keys;
   std::string buffer;
-  int parserState;
+  uint64_t parserState;
 };
 
   } // namespace hkp

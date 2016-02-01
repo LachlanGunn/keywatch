@@ -37,7 +37,7 @@ enum ParserState {
 };
 
 struct raw_info {
-  int32_t version;
+  int64_t version;
   int64_t count;
 };
 
@@ -62,7 +62,7 @@ struct raw_public_key {
 
 BOOST_FUSION_ADAPT_STRUCT(
     keywatch::hkp::raw_info,
-    (int32_t, version)
+    (int64_t, version)
     (int64_t, count)
 )
 
