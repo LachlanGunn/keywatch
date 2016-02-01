@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
   keywatch::hkp::HKPInit();
 
   try {
-    po::options_description desc("Allozed options");
+    po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
         ("recipient,r", po::value< std::vector<std::string> >(),
