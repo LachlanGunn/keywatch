@@ -20,6 +20,8 @@ using Tor, it is possible to provide a conditional guarantee that the
 keyserver is not selectively providing different keys to different
 users.
 
+Keywatch is provided under the MIT licence.
+
 Synopsis
 --------
 
