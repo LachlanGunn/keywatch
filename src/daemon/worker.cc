@@ -38,8 +38,6 @@ template <class duration>
 static double GetPeriodNumberForTimePoint(
     std::chrono::milliseconds tick_duration,
     std::chrono::time_point<std::chrono::system_clock, duration> time_point) {
-
-  auto epoch = GetEpoch();
   auto time_since_epoch = time_point - GetEpoch();
 
   return (double)(time_since_epoch / tick_duration);
@@ -59,9 +57,6 @@ static void WaitForNextRequest(std::chrono::milliseconds tick_length,
                                std::chrono::system_clock::time_point window) {  
   double offset = GetNextOffset();
   auto next_tick = window + tick_length*offset;
-
-  auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
-      next_tick -  std::chrono::system_clock::now()).count();
 
   std::this_thread::sleep_until(next_tick);
 }
