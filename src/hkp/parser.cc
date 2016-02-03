@@ -24,6 +24,7 @@
 
 #include <string>
 #include <tuple>
+#include <algorithm>
 
 #include <boost/spirit/include/qi.hpp>                // NOLINT
 #include <boost/spirit/include/phoenix_core.hpp>      // NOLINT
@@ -33,19 +34,22 @@
 #include <boost/fusion/adapted/struct.hpp>            // NOLINT
 #include <boost/fusion/include/io.hpp>                // NOLINT
 
-#include <boost/config.hpp>                           // NOLINT
+#include <boost/optional.hpp>                         // NOLINT
 
 #include "keys/keys.h"
 
 namespace keywatch {
-  namespace hkp {
+namespace hkp {
 
 using keywatch::keys::PublicKey;
 using keywatch::keys::UserID;
 
-
 namespace qi    = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
+
+using qi::int_;
+using qi::lit;
+using ascii::char_;
 
 enum ParserState {
   AwaitingInfo = 0,
@@ -56,23 +60,23 @@ enum ParserState {
 
 struct raw_info {
   int64_t version;
-  int64_t count;
+  boost::optional<int64_t> count;
 };
 
 struct raw_uid {
   std::string user;
-  int64_t creation_date;
-  int64_t expiration_date;
-  std::string flags;
+  boost::optional<int64_t> creation_date;
+  boost::optional<int64_t> expiration_date;
+  boost::optional<std::string> flags;
 };
 
 struct raw_public_key {
   std::string key_id;
-  int32_t algorithm;
-  int32_t length;
-  int64_t creation_date;
-  int64_t expiration_date;
-  std::string flags;
+  boost::optional<int32_t> algorithm;
+  boost::optional<int32_t> length;
+  boost::optional<int64_t> creation_date;
+  boost::optional<int64_t> expiration_date;
+  boost::optional<std::string> flags;
 };
 
   }
@@ -81,25 +85,25 @@ struct raw_public_key {
 BOOST_FUSION_ADAPT_STRUCT(
     keywatch::hkp::raw_info,
     (int64_t, version)
-    (int64_t, count)
+    (boost::optional<int64_t>, count)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
     keywatch::hkp::raw_uid,
     (std::string, user)
-    (int64_t, creation_date)
-    (int64_t, expiration_date)
-    (std::string, flags)
+    (boost::optional<int64_t>, creation_date)
+    (boost::optional<int64_t>, expiration_date)
+    (boost::optional<std::string>, flags)
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
     keywatch::hkp::raw_public_key,
     (std::string, key_id)
-    (int32_t, algorithm)
-    (int32_t, length)
-    (int64_t, creation_date)
-    (int64_t, expiration_date)
-    (std::string, flags)
+    (boost::optional<int32_t>, algorithm)
+    (boost::optional<int32_t>, length)
+    (boost::optional<int64_t>, creation_date)
+    (boost::optional<int64_t>, expiration_date)
+    (boost::optional<std::string>, flags)
 )
 
 namespace keywatch {
@@ -119,8 +123,8 @@ struct info_parser : qi::grammar<Iterator, raw_info()> {
 
     start %=
         lit("info")
-        >> -(':' >> -int_
-        >> -(':' >> -int_));
+        >> ':' >> -int_
+        >> ':' >> -int_;
   }
 
   qi::rule<Iterator, raw_info()> start;
@@ -136,10 +140,10 @@ struct uid_parser : qi::grammar<Iterator, raw_uid()> {
 
     start %=
         lit("uid")
-        >> -(':' >> *(char_ - ':')
-        >> -(':' >> -int_
-        >> -(':' >> -int_
-        >> -(':' >> *(char_ - ':')))));
+        >> ':' >> *(char_ - ':')
+        >> ':' >> -int_
+        >> ':' >> -int_
+        >> ':' >> *(char_ - ':');
   }
 
   qi::rule<Iterator, raw_uid()> start;
@@ -150,39 +154,64 @@ struct public_key_parser : qi::grammar<Iterator, raw_public_key()> {
   public_key_parser() : public_key_parser::base_type(start) {
     using qi::int_;
     using qi::lit;
-    using qi::lexeme;
     using ascii::char_;
+
+    using boost::spirit::_1;
+    using boost::spirit::_val;
 
     start %=
         lit("pub")
-        >> -(':' >> *(char_ - ':')
-        >> -(':' >> -int_
-        >> -(':' >> -int_
-        >> -(':' >> -int_
-        >> -(':' >> -int_
-        >> -(':' >> *(char_ - ':')))))));
+        >> ':' >> *(char_ - ':')
+        >> ':' >> -int_
+        >> ':' >> -int_
+        >> ':' >> -int_
+        >> ':' >> -int_
+        >> ':' >> *(char_ - ':');
   }
 
   qi::rule<Iterator, raw_public_key()> start;
 };
 
-template <typename Iterator>
-bool parse_info(Iterator first, Iterator last, struct raw_info* result) {
-  info_parser<Iterator> grammar;
-  return qi::parse(first, last, grammar, *result);
+bool parse_info(std::string line, struct raw_info* result) {
+  std::size_t separators_found = std::count(line.begin(), line.end(), ':');
+  for (; separators_found < 2; separators_found++) {
+    line += ':';
+  }
+
+  std::string::const_iterator first = line.begin();
+  std::string::const_iterator last  = line.end();
+
+  info_parser<std::string::const_iterator> grammar;
+  bool success = qi::parse(first, last, grammar, *result);
+  return success && (first == last);
 }
 
-template <typename Iterator>
-bool parse_public_key(Iterator first, Iterator last,
-                        struct raw_public_key* result) {
-  public_key_parser<Iterator> grammar;
-  return qi::parse(first, last, grammar, *result);
+bool parse_public_key(std::string line, struct raw_public_key* result) {
+  std::size_t separators_found = std::count(line.begin(), line.end(), ':');
+  for (; separators_found < 6; separators_found++) {
+    line += ':';
+  }
+
+  std::string::const_iterator first = line.begin();
+  std::string::const_iterator last  = line.end();
+
+  public_key_parser<std::string::const_iterator> grammar;
+  bool success = qi::parse(first, last, grammar, *result);
+  return success && (first == last);
 }
 
-template <typename Iterator>
-bool parse_uid(Iterator first, Iterator last, struct raw_uid* result) {
-  uid_parser<Iterator> grammar;
-  return qi::parse(first, last, grammar, *result);
+bool parse_uid(std::string line, struct raw_uid* result) {
+  std::size_t separators_found = std::count(line.begin(), line.end(), ':');
+  for (; separators_found < 4; separators_found++) {
+    line += ':';
+  }
+
+  std::string::const_iterator first = line.begin();
+  std::string::const_iterator last  = line.end();
+
+  uid_parser<std::string::const_iterator> grammar;
+  bool success = qi::parse(first, last, grammar, *result);
+  return success && (first == last);
 }
 
 static std::tuple<bool, std::string, std::string> find_newline(
@@ -259,38 +288,38 @@ void HKPResponseParser::parseLine(std::string line) {
 
   switch (parserState) {
     case AwaitingInfo:
-      if (parse_info(line.begin(), line.end(), &info)) {
+      if (parse_info(line, &info)) {
         parserState = AwaitingPub;
       }
       break;
     case AwaitingPub:
-      if (parse_public_key(line.begin(), line.end(), &pub)) {
+      if (parse_public_key(line, &pub)) {
         _keys.push_back(PublicKey(
             pub.key_id,
-            pub.algorithm,
-            pub.length,
-            pub.creation_date,
-            pub.expiration_date,
-            pub.flags));
+            pub.algorithm ? *pub.algorithm : -1,
+            pub.length ? *pub.length : -1,
+            pub.creation_date ? *pub.creation_date : -1,
+            pub.expiration_date ? *pub.expiration_date : -1,
+            pub.flags ? *pub.flags : ""));
 
         parserState = AwaitingUid;
       }
       break;
     case AwaitingUid:
-      if (parse_uid(line.begin(), line.end(), &uid)) {
+      if (parse_uid(line, &uid)) {
         _keys.back().addUid(UserID(
             uid.user,
-            uid.creation_date,
-            uid.expiration_date,
-            uid.flags));
-      } else if (parse_public_key(line.begin(), line.end(), &pub)) {
+            uid.creation_date ? *uid.creation_date : -1,
+            uid.expiration_date ? *uid.expiration_date : -1,
+            uid.flags ? *uid.flags : ""));
+      } else if (parse_public_key(line, &pub)) {
         _keys.push_back(PublicKey(
             pub.key_id,
-            pub.algorithm,
-            pub.length,
-            pub.creation_date,
-            pub.expiration_date,
-            pub.flags));
+            pub.algorithm ? *pub.algorithm : -1,
+            pub.length ? *pub.length : -1,
+            pub.creation_date ? *pub.creation_date : -1,
+            pub.expiration_date ? *pub.expiration_date : -1,
+            pub.flags ? *pub.flags : ""));
       }
   }
 }
@@ -300,5 +329,5 @@ void HKPResponseParser::flush() {
   buffer = std::string();
 }
 
-  } // namespace hkp
+} // namespace hkp
 } // namespace keywatch
