@@ -26,9 +26,11 @@
 #include <cstdint>
 #include <cmath>
 #include <queue>
+#include <algorithm>
 
 #include <cryptopp/osrng.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/format.hpp>
 
 #include "daemon/worker.h"
 #include "daemon/config.h"
@@ -82,6 +84,87 @@ static void WaitForNextRequest(std::chrono::milliseconds tick_length,
   std::this_thread::sleep_until(next_tick);
 }
 
+/**
+ * Determine whether a set of HKP response flags indicate an active entry.
+ *
+ * AreFlagsActive checks a flags string from an HKP response to determine
+ * whether the corresponding entry is active.  In particular, this means
+ * checking whether it contains the characters 'r', 'e', or 'd'.
+ *
+ * \param[in]  flags    The flag string to check.
+ *
+ * return  A boolean value that is true if and only if the entry is active.
+ */
+static bool AreFlagsActive(std::string flags) {
+  return flags.end() == std::find_if(flags.begin(), flags.end(),
+                                     [](char c) -> bool {
+                                       switch (c) {
+                                         case 'r':
+                                         case 'e':
+                                         case 'd':
+                                           return true;
+                                         default:
+                                           return false;
+                                       };
+                                     });
+}
+
+
+/**
+ * Determine whether a key is valid for the given recipient.
+ *
+ * The IsValidKey function determines whether or not a PublicKey object
+ * is could conceivably be used to communicate with the recipient.  In
+ * particular, it checks that both of the following are true:
+ *
+ *   1. At least one UID contains a string of the form "<email>", where
+ *        <email> is the recipient's email address.
+ *   2. The key does not have its "expired", "revoked", or "disabled"
+ *        flags set.
+ *
+ * \param[in] recipient    The recipient against whom the public key should
+ *                           be validated.
+ * \param[in] key          The key which is to be checked.
+ *
+ * \return A boolean value---true if and only if both conditions are met.
+ */
+static bool IsValidKey(const Recipient& recipient, const PublicKey& key) {
+  std::list<UserID> uids = key.uids();
+  // Find the first UserID uid such that uid.identifier() contains "<email>".
+  std::list<UserID>::iterator matching_uid
+      = std::find_if(uids.begin(), uids.end(),
+                     [&recipient](UserID uid) -> bool {
+                       if (uid.identifier().find(
+                               (boost::format("<%1%>") % recipient.email())
+                               .str()) == std::string::npos) {
+                         return false;
+                       }
+                       return AreFlagsActive(uid.flags());
+                     });
+  // We couldn't find a UID matching the email.
+  if (matching_uid == uids.end()) {
+    return false;
+  }
+
+  // Now check that the key hasn't expired/been revoked/been disabled.
+  return AreFlagsActive(key.flags());
+}
+
+static std::unique_ptr<const PublicKey> FindFirstKey(
+    Recipient recipient,
+    std::list<PublicKey> keys) {
+  std::list<PublicKey>::const_iterator first_match
+      = std::find_if(keys.begin(), keys.end(),
+                     [&recipient](const PublicKey& key) -> bool {
+                       return IsValidKey(recipient, key);
+                     });
+
+  return (first_match == keys.end())
+      ? nullptr
+      : std::unique_ptr<const PublicKey>(
+            new PublicKey(*first_match));
+}
+
 void workerThread(Recipient recipient,
                   std::mutex& queue_mutex,
                   std::condition_variable& queue_condition_variable,
@@ -99,18 +182,18 @@ void workerThread(Recipient recipient,
     next_period_start += period;
 
     std::list<PublicKey> keys = server.GetKeys(email);
-    if (keys.empty()) {
+    std::unique_ptr<const PublicKey> first_key = FindFirstKey(recipient, keys);
+    if (nullptr == first_key) {
+      std::cerr << "No valid key returned." << std::endl;
       continue;
     }
 
-    PublicKey first_key = keys.front();
-
     if (nullptr == fingerprint) {
-      fingerprint.reset(new std::string(first_key.identifier()));
+      fingerprint.reset(new std::string(first_key->identifier()));
     }
-    else if(first_key.identifier() != *fingerprint) {
+    else if(first_key->identifier() != *fingerprint) {
       std::unique_lock<std::mutex> queue_lock(queue_mutex);
-      responses->push(keys.front());
+      responses->push(*first_key);
       queue_lock.unlock();
       queue_condition_variable.notify_one();
     }
