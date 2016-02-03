@@ -30,6 +30,7 @@
 #include <memory>
 #include <queue>
 #include <deque>
+#include <exception>
 
 #include <boost/program_options.hpp> // NOLINT
 
@@ -131,10 +132,9 @@ int main(int argc, char** argv) {
       }
     }
   }
-  catch (...) {
+  catch (std::exception e) {
     keywatch::hkp::HKPCleanup();
-    throw;
+    std::cerr << "Fatal error: " << e.what() << std::endl;
   }
-
-  return 0;
+  return 1;
 }
