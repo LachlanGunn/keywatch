@@ -22,6 +22,7 @@
 
 #include <string>
 #include <mutex>
+#include <iostream>
 
 extern "C" {
 #include <curl/curl.h> // NOLINT

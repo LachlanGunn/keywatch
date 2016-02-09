@@ -28,6 +28,9 @@ IF(NOT CRYPTOPP_LIBRARIES)
   MESSAGE(SEND_ERROR "Could not find Crypto++")
 ENDIF(NOT CRYPTOPP_LIBRARIES)
 
+# Threads (for std::thread)
+FIND_PACKAGE(Threads)
+
 #### Down to business #########################################################
 
 SUBDIRS(src)
