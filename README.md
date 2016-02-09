@@ -66,7 +66,11 @@ This will continue until the file is returned to its original state.
 Building keywatchd
 ------------------
 
-Keywatch is written in C++, and requires the Boost and libcurl libraries.
+Keywatch is written in C++, and requires the following libraries:
+  - Boost (including program_options),
+  - libcurl, and
+  - Crypto++.
+
 The build infrastructure uses CMake, and has been tested on Linux with both
 GCC and clang.  It can be built as follows:
 ```
