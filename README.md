@@ -32,7 +32,7 @@ fingerprint of the first response.
 ```
 By default, keywatchd will use Tor to connect to
 http://jirk5u4osbsr34t5.onion:11371,
-a hidden service that provides access to the SKS Keyserver network.  We use
+a hidden service that provides access to the SKS Keyserver network.
 This is defensive design decision to ensure that a bug cannot cause the
 site to be resolved directly, without the use of Tor.
 
