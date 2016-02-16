@@ -1,6 +1,6 @@
 Keywatch
 ========
-**Automatic key  change detection for PGP**
+**Automatic key change detection for PGP**
 
 Public keyservers are inherently untrustworthy: anyone can submit a key,
 and even servers such as the PGP Global Directory, which provides email
@@ -21,6 +21,14 @@ keyserver is not selectively providing different keys to different
 users.
 
 Keywatch is provided under the MIT licence.
+
+**Note:** A preprint is available, describing the approach in more detail
+along with the security guarantees that it provides:
+
+L. J. Gunn, A. Allison, D. Abbott,
+_Verifying public keys without trust:
+    how anonymity can guarantee data integrity_,
+<a href="http://arxiv.org/abs/1602.03316">ArXiV:1602.03316</a>, 2016.
 
 Synopsis
 --------
