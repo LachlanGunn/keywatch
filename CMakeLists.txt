@@ -31,6 +31,9 @@ ENDIF(NOT CRYPTOPP_LIBRARIES)
 # Threads (for std::thread)
 FIND_PACKAGE(Threads)
 
+# NCURSES
+FIND_PACKAGE(Curses)
+
 #### Down to business #########################################################
 
 SUBDIRS(src)

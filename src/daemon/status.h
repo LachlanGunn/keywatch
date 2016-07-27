@@ -18,31 +18,63 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef KEYWATCH_DAEMON_WORKER_H_
-#define KEYWATCH_DAEMON_WORKER_H_
+#ifndef KEYWATCH_DAEMON_STATUS_H_
+#define KEYWATCH_DAEMON_STATUS_H_
 
-#include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <memory>
 
-#include "keys/keys.h"
 #include "daemon/config.h"
-#include "daemon/status.h"
 
 namespace keywatch {
 namespace daemon {
 
-void workerThread(Recipient recipient,
-                  std::mutex& queue_mutex,
-                  std::condition_variable& queue_condition_variable,
-                  bool& finished,
-                  std::mutex& exit_mutex,
-                  std::condition_variable& exit_condition_variable,
-                  std::shared_ptr<KeyStatus> status,
-                  std::queue<keywatch::keys::PublicKey>* responses);
+/**
+ * Status information for a given key.  Allows us to maintain the
+ * state necessary for meaningful displays.
+ */
+class KeyStatus {
+ public:
+  explicit KeyStatus(const Recipient& recipient);
 
-}
-}
+  Recipient recipient();
+  
+  int64_t request_count();
+  int64_t mismatch_count();
+  int64_t error_count();
+  int64_t current_streak();
 
-#endif  // KEYWATCH_DAEMON_WORKER_H_
+  /**
+   * Add one response of the expected value to the count.
+   */
+  void RegisterMatch();
+
+  /**
+   * Add one response of an unexpected value to the count.
+   */
+  void RegisterMismatch();
+
+  /**
+   * Add one failed request to the count.
+   */
+  void RegisterError();
+
+  /**
+   * Reset status statistics.  This returns the object to its initial state.
+   */
+  void Reset();
+  
+ protected:
+  std::mutex status_mutex;
+ 
+ private:
+  Recipient recipient_;
+  int64_t successes_;
+  int64_t failures_;
+  int64_t errors_;
+  int64_t streak_;
+};
+
+} //   namespace daemon
+} // namespace keywatch
+
+#endif

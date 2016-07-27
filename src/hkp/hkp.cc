@@ -24,6 +24,9 @@
 #include <mutex>
 #include <iostream>
 
+#include <sys/types.h>
+#include <unistd.h>
+
 extern "C" {
 #include <curl/curl.h> // NOLINT
 }
@@ -115,8 +118,8 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
     // The connection number is global, we need to lock for thread-safety.
     {
       std::lock_guard<std::mutex> lock(connection_number_mutex);
-      proxy_url = (boost::format("%1%:password@%2%")
-                   % connection_number++ % proxy_).str();
+      proxy_url = (boost::format("%1%:%2%@%3%")
+                   % getpid() % connection_number++ % proxy_).str();
     }
     curl_easy_setopt(state_->curl_handle, CURLOPT_PROXY, proxy_url.c_str());
     curl_easy_setopt(state_->curl_handle, CURLOPT_PROXYTYPE,
@@ -129,7 +132,7 @@ const std::list<PublicKey> HKPServer::GetKeys(std::string email) {
   CURLcode curl_error = curl_easy_perform(state_->curl_handle);
 
   if (curl_error) {
-    std::cerr << "ERROR: " << curl_easy_strerror(curl_error) << "\n";
+    //std::cerr << "ERROR: " << curl_easy_strerror(curl_error) << "\n";
     return std::list<PublicKey>();
   }
   parser.flush();

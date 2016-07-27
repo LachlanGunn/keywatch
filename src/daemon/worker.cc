@@ -27,6 +27,7 @@
 #include <cmath>
 #include <queue>
 #include <algorithm>
+#include <memory>
 
 #include <cryptopp/osrng.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -76,12 +77,16 @@ GetCurrentPeriodEnd(std::chrono::milliseconds tick_duration) {
   return std::chrono::time_point_cast<std::chrono::milliseconds>(epoch + tick_duration*std::ceil(period_number));
 }
 
-static void WaitForNextRequest(std::chrono::milliseconds tick_length,
-                               std::chrono::system_clock::time_point window) {  
+static void WaitForNextRequest(
+    std::chrono::milliseconds tick_length,
+    std::chrono::system_clock::time_point window,
+    std::mutex& exit_mutex,
+    std::condition_variable& exit_condition_variable) {  
   double offset = GetNextOffset();
   auto next_tick = window + tick_length*offset;
 
-  std::this_thread::sleep_until(next_tick);
+  std::unique_lock<std::mutex> lock(exit_mutex);
+  exit_condition_variable.wait_until(lock, next_tick);
 }
 
 /**
@@ -165,9 +170,16 @@ static std::unique_ptr<const PublicKey> FindFirstKey(
             new PublicKey(*first_match));
 }
 
+/**
+ * Worker thread: download the keys.
+ */
 void workerThread(Recipient recipient,
                   std::mutex& queue_mutex,
                   std::condition_variable& queue_condition_variable,
+                  bool& finished,
+                  std::mutex& exit_mutex,
+                  std::condition_variable& exit_condition_variable,
+                  std::shared_ptr<KeyStatus> status,
                   std::queue<PublicKey>* responses) {
   keywatch::hkp::HKPServer server(recipient.keyserver(), recipient.proxy());
 
@@ -178,13 +190,19 @@ void workerThread(Recipient recipient,
   auto next_period_start = GetCurrentPeriodEnd(period);
 
   while (true) {
-    WaitForNextRequest(period, next_period_start);
+    WaitForNextRequest(period, next_period_start,
+                       exit_mutex, exit_condition_variable);
     next_period_start += period;
+
+    if (finished) {
+      break;
+    }
 
     std::list<PublicKey> keys = server.GetKeys(email);
     std::unique_ptr<const PublicKey> first_key = FindFirstKey(recipient, keys);
     if (nullptr == first_key) {
-      std::cerr << "No valid key returned." << std::endl;
+      //std::cerr << "No valid key returned." << std::endl;
+      status->RegisterError();
       continue;
     }
 
@@ -196,7 +214,15 @@ void workerThread(Recipient recipient,
       responses->push(*first_key);
       queue_lock.unlock();
       queue_condition_variable.notify_one();
+
+      // Update the key statistics.
+      status->RegisterMismatch();
     }
+    else {
+      status->RegisterMatch();
+    }
+
+    *fingerprint = first_key->identifier();
   }
 }
 

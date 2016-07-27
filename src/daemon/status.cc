@@ -18,31 +18,73 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-#ifndef KEYWATCH_DAEMON_WORKER_H_
-#define KEYWATCH_DAEMON_WORKER_H_
-
-#include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <memory>
 
-#include "keys/keys.h"
 #include "daemon/config.h"
 #include "daemon/status.h"
+#include "keys/keys.h"
 
 namespace keywatch {
 namespace daemon {
 
-void workerThread(Recipient recipient,
-                  std::mutex& queue_mutex,
-                  std::condition_variable& queue_condition_variable,
-                  bool& finished,
-                  std::mutex& exit_mutex,
-                  std::condition_variable& exit_condition_variable,
-                  std::shared_ptr<KeyStatus> status,
-                  std::queue<keywatch::keys::PublicKey>* responses);
-
-}
+KeyStatus::KeyStatus(const Recipient& recipient)
+    : recipient_(recipient) {
+  Reset();
 }
 
-#endif  // KEYWATCH_DAEMON_WORKER_H_
+void KeyStatus::Reset() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  
+  successes_ = 0;
+  failures_ = 0;
+  errors_ = 0;
+  streak_ = 0;
+}
+
+void KeyStatus::RegisterMatch() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  
+  successes_++;
+  streak_++;
+}
+
+void KeyStatus::RegisterMismatch() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  
+  failures_++;
+  streak_ = 0;
+}
+
+void KeyStatus::RegisterError() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  
+  errors_++;
+}
+
+Recipient KeyStatus::recipient() {
+  // We don't need a lock here because recipient is immutable.
+  return recipient_;
+}
+
+int64_t KeyStatus::request_count() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  return successes_ + failures_;
+}
+
+int64_t KeyStatus::mismatch_count() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  return failures_;
+}
+
+int64_t KeyStatus::error_count() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  return errors_;
+}
+
+int64_t KeyStatus::current_streak() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  return streak_;
+}
+
+} // namespace keywatch
+} //   namespace daemon

@@ -33,6 +33,7 @@
 #include <exception>
 
 #include <boost/program_options.hpp> // NOLINT
+#include <ncurses.h>
 
 #include "hkp/hkp.h"
 #include "keys/keys.h"
@@ -53,6 +54,12 @@ namespace po = boost::program_options;
 
 int main(int argc, char** argv) {
   keywatch::hkp::HKPInit();
+
+  // We need these during cleanup, so we declare them up here.
+  std::list< std::unique_ptr<std::thread> > threads;
+  bool finished;
+  std::mutex exit_mutex;
+  std::condition_variable exit_condition_variable;
 
   try {
     po::options_description desc("Allowed options");
@@ -93,34 +100,106 @@ int main(int argc, char** argv) {
     std::vector<std::string> recipients;
     recipients = vm["recipient"].as< std::vector<std::string> >();
 
-    std::list< std::unique_ptr<std::thread> > threads;
+    std::vector< std::shared_ptr<keywatch::daemon::KeyStatus> >
+        recipient_statuses(recipients.size());
+
     std::queue<PublicKey> responses;
     std::mutex queue_mutex;
     std::condition_variable queue_condition_variable;
 
+    size_t longest_email = 0;
+
+    int thread_number = 0;
     for (std::vector<std::string>::const_iterator i = recipients.begin();
-         i != recipients.end(); i++) {
+         i != recipients.end(); i++, thread_number++) {
+
+      if( i->size() > longest_email ) {
+        longest_email = i->size();
+      }
+      
+      recipient_statuses[thread_number] =
+          std::shared_ptr<keywatch::daemon::KeyStatus>(
+              new keywatch::daemon::KeyStatus(
+                  keywatch::daemon::Recipient(*i, keyserver, proxy)));
 
       threads.push_back(std::unique_ptr<std::thread>(
           new std::thread(std::bind(keywatch::daemon::workerThread,
-                                    keywatch::daemon::Recipient(*i, keyserver,
-                                                                proxy),
+                                    recipient_statuses[
+                                        thread_number]->recipient(),
                                     std::ref(queue_mutex),
                                     std::ref(queue_condition_variable),
+                                    std::ref(finished),
+                                    std::ref(exit_mutex),
+                                    std::ref(exit_condition_variable),
+                                    recipient_statuses[thread_number],
                                     &responses))));
-
     }
 
+    initscr();
+    start_color();
+    raw();
+    noecho();
+    halfdelay(1);
+
+    // Set up display colours.
+    //   0 => Normal
+    //   1 => Green, for good keys
+    //   2 => Red,   for bad keys
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_RED,   COLOR_BLACK);
+
     while (true) {
+      /*
       std::unique_lock<std::mutex> queue_lock(queue_mutex);
       if(responses.empty()) {
-        queue_condition_variable.wait(queue_lock);
+        queue_condition_variable.wait_until(queue_lock);
       }
 
       PublicKey key = responses.front();
       responses.pop();
       queue_lock.unlock();
+      */
+      attron(A_BOLD);
+      mvprintw(0, longest_email, "Streak / Total / Error");
+      attroff(A_BOLD);
 
+      int j = 0;
+      for (auto i = recipient_statuses.begin();
+           i != recipient_statuses.end();
+           i++, j++) {
+        bool warning = (*i)->mismatch_count() > 0;
+        if (warning) {
+          attron(COLOR_PAIR(2));
+        }
+        else if( (*i)->current_streak() >= 10 ) {
+          attron(COLOR_PAIR(1));
+        }
+
+        std::string email = (*i)->recipient().email();
+        mvprintw(j+1, 0, "%s", email.c_str());
+        attroff(COLOR_PAIR(2));
+        attroff(COLOR_PAIR(1));
+
+        mvprintw(j+1, 1+longest_email, "%5d / %5d / %5d", 
+                 (*i)->current_streak(),
+                 (*i)->request_count(),
+                 (*i)->error_count());
+
+        if (warning) {
+          attron(COLOR_PAIR(2));
+          printw(" Inconsistent!");
+          attroff(COLOR_PAIR(2));
+        }
+      }
+      refresh();
+      int character_input = getch();
+      if('q' == character_input) {
+        break;
+      }
+
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+
+      /*
       printf("Key: %s\n", key.identifier().c_str());
 
       std::list<UserID>::const_iterator iterator_uid, end_uid;
@@ -130,11 +209,19 @@ int main(int argc, char** argv) {
            iterator_uid++) {
         printf("    UID: %s\n", iterator_uid->identifier().c_str());
       }
+      */
     }
   }
   catch (std::exception e) {
-    keywatch::hkp::HKPCleanup();
     std::cerr << "Fatal error: " << e.what() << std::endl;
   }
+
+  finished = true;
+  exit_condition_variable.notify_all();
+  for (auto i = threads.begin(); i != threads.end(); i++) {
+    (*i)->join();
+  }
+  endwin();
+  keywatch::hkp::HKPCleanup();
   return 1;
 }
