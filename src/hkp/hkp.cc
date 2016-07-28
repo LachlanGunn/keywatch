@@ -81,6 +81,9 @@ HKPServer::HKPServer(std::string host, std::string proxy) : host_(host) {
   curl_easy_setopt(state_->curl_handle, CURLOPT_FOLLOWLOCATION,
                    1);
 
+  curl_easy_setopt(state_->curl_handle, CURLOPT_TIMEOUT,
+                   30);
+
 }
 
 HKPServer::~HKPServer() {

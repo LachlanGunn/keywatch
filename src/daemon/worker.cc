@@ -189,11 +189,13 @@ void workerThread(Recipient recipient,
   auto period = std::chrono::seconds(10);
   auto next_period_start = GetCurrentPeriodEnd(period);
 
-  while (true) {
+  while (!finished) {
     WaitForNextRequest(period, next_period_start,
                        exit_mutex, exit_condition_variable);
     next_period_start += period;
 
+    // If shutdown has started then we should escape before the request
+    // has gone through.
     if (finished) {
       break;
     }

@@ -149,16 +149,6 @@ int main(int argc, char** argv) {
     init_pair(2, COLOR_RED,   COLOR_BLACK);
 
     while (true) {
-      /*
-      std::unique_lock<std::mutex> queue_lock(queue_mutex);
-      if(responses.empty()) {
-        queue_condition_variable.wait_until(queue_lock);
-      }
-
-      PublicKey key = responses.front();
-      responses.pop();
-      queue_lock.unlock();
-      */
       attron(A_BOLD);
       mvprintw(0, longest_email, "Streak / Total / Error");
       attroff(A_BOLD);
@@ -198,18 +188,6 @@ int main(int argc, char** argv) {
       }
 
       std::this_thread::sleep_for(std::chrono::seconds(1));
-
-      /*
-      printf("Key: %s\n", key.identifier().c_str());
-
-      std::list<UserID>::const_iterator iterator_uid, end_uid;
-      std::list<UserID> uids = key.uids();
-      for (iterator_uid = uids.begin(), end_uid = uids.end();
-           iterator_uid != end_uid;
-           iterator_uid++) {
-        printf("    UID: %s\n", iterator_uid->identifier().c_str());
-      }
-      */
     }
   }
   catch (std::exception e) {

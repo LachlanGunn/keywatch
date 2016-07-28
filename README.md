@@ -62,22 +62,18 @@ keywatchd -s http://localhost -p "" lachlan@twopif.net
 Sometime during the first twenty seconds, it will load the file from
 the web server.  Now modify the fingerprint in the first key somehow
 (we have added an initial 'X').  The next time the key is downloaded,
-the changed fingerprint will be detected and the new key will be printed:
-```
-> keywatchd -s http://localhost -p "" lachlan@twopif.net
-Key: XF3E3889185605B82933D6180D28891D2136B33B0
-    UID: Lachlan Gunn <lachlan@twopif.net>
-    UID: Lachlan Gunn <lachlan.gunn@adelaide.edu.au>
-```
-This will continue until the file is returned to its original state.
+the changed fingerprint will be detected and the email will turn red
+on the display, remaining so even after the fingerprint is returned
+to its original state.
 
 Building keywatchd
 ------------------
 
 Keywatch is written in C++, and requires the following libraries:
   - Boost (including program_options),
-  - libcurl, and
-  - Crypto++.
+  - libcurl,
+  - Crypto++, and
+  - libncurses
 
 The build infrastructure uses CMake, and has been tested on Linux with both
 GCC and clang.  It can be built as follows:
