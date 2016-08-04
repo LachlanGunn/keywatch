@@ -41,9 +41,10 @@ void KeyStatus::Reset() {
   streak_ = 0;
 }
 
-void KeyStatus::RegisterMatch() {
+void KeyStatus::RegisterMatch(std::string fingerprint) {
   std::lock_guard<std::mutex> guard(status_mutex);
-  
+
+  fingerprint_ = fingerprint;
   successes_++;
   streak_++;
 }
@@ -84,6 +85,11 @@ int64_t KeyStatus::error_count() {
 int64_t KeyStatus::current_streak() {
   std::lock_guard<std::mutex> guard(status_mutex);
   return streak_;
+}
+
+std::string KeyStatus::fingerprint() {
+  std::lock_guard<std::mutex> guard(status_mutex);
+  return fingerprint_;
 }
 
 } // namespace keywatch

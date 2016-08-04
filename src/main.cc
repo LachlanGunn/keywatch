@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 
     while (true) {
       attron(A_BOLD);
-      mvprintw(0, longest_email, "Streak / Total / Error");
+      mvprintw(0, longest_email, "Streak / Total / Error / Key ID");
       attroff(A_BOLD);
 
       int j = 0;
@@ -179,6 +179,15 @@ int main(int argc, char** argv) {
           attron(COLOR_PAIR(2));
           printw(" Inconsistent!");
           attroff(COLOR_PAIR(2));
+        }
+        else {
+          size_t fp_size = (*i)->fingerprint().size();
+          if (fp_size == 40) {
+            printw(" / ... %s", (*i)->fingerprint().substr(24,8).c_str());
+            attron(A_BOLD);
+            printw(" %s", (*i)->fingerprint().substr(32).c_str());
+            attroff(A_BOLD);
+          }
         }
       }
       refresh();

@@ -42,11 +42,12 @@ class KeyStatus {
   int64_t mismatch_count();
   int64_t error_count();
   int64_t current_streak();
+  std::string fingerprint();
 
   /**
    * Add one response of the expected value to the count.
    */
-  void RegisterMatch();
+  void RegisterMatch(std::string fingerprint);
 
   /**
    * Add one response of an unexpected value to the count.
@@ -63,7 +64,7 @@ class KeyStatus {
    */
   void Reset();
   
- protected:
+protected:
   std::mutex status_mutex;
  
  private:
@@ -72,6 +73,7 @@ class KeyStatus {
   int64_t failures_;
   int64_t errors_;
   int64_t streak_;
+  std::string fingerprint_;
 };
 
 } //   namespace daemon

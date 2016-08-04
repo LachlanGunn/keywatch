@@ -221,7 +221,7 @@ void workerThread(Recipient recipient,
       status->RegisterMismatch();
     }
     else {
-      status->RegisterMatch();
+      status->RegisterMatch(first_key->identifier());
     }
 
     *fingerprint = first_key->identifier();
